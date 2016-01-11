@@ -1,0 +1,63 @@
+<% if user_signed_in? and current_user.wechat_subscribed? %>
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script type="text/javascript">
+
+  window.live_id = "<%= @live.id %>"
+
+  wx.config({
+    debug: false,
+    appId: '<%= leadings_wechat_jssdk_hash[:appid]%>',
+    timestamp: <%= leadings_wechat_jssdk_hash[:timestamp]%>,
+    nonceStr: '<%= leadings_wechat_jssdk_hash[:noncestr]%>',
+    signature: '<%= leadings_wechat_jssdk_hash[:signature]%>',
+    jsApiList: [
+    'onMenuShareTimeline',
+    'onMenuShareAppMessage',
+    'onMenuShareWeibo',
+    ]
+  });
+
+  wx.ready(function () {
+    var attrs = {
+      title: '<%= @live.subject %>',
+      desc: '<%= @live.desc %>',
+      link: '<%= live_url(@live) %>',
+      imgUrl: '<%= "%s%s" % [Rails.application.config.x.site["url"], @live.cover_pic_url(:thumb)] %>',
+      trigger: function (res) {
+        // alert(JSON.stringify(res));
+      },
+      success: function (res) {
+        $.ajax({
+          type: "POST",
+          url: "<%= live_entries_path %>",
+          dataType: 'json',
+          data: {
+            live_entry: {
+              live_id: window.live_id
+            }
+          },
+          success: function(){
+            console.log('post record success')
+            $("#live_enter_btn_area").hide()
+            $("#live_entered_btn_area").show()
+            alert('恭喜您报名成功。')
+          },
+          error: function (error) {
+            console.log('post record error')
+            alert('报名失败，请联系管理员。')
+          }
+        })
+      },
+      cancel: function (res) {
+        // alert(JSON.stringify(res));
+      },
+      fail: function (res) {
+        // alert(JSON.stringify(res));
+      }
+    };
+
+    wx.onMenuShareAppMessage(attrs);
+    wx.onMenuShareTimeline(attrs);
+  });
+</script>
+<% end %>
